@@ -9,7 +9,7 @@ const axiosInstance = axios.create({
     timeout: 100000,
     headers: {
         Accept: 'application/vnd.github.v3+json',
-        Authorization: 'Bearer ',
+        Authorization: `Bearer ${process.env.GITHUB_BEARER}`,
     },
 });
 
@@ -19,15 +19,15 @@ export const saveFile = async (fileName: string, data: string, withDateVersionin
     console.log('File saved on ', fileName);
 }
 
-export const getRepos = async (nextPage: number = 1, repos: Array<object> = []) => {
-    const url = `/orgs/myrepo/repos?page=${nextPage}`;
+export const getRepos = async (org: string, nextPage: number = 1, repos: Array<object> = []) => {
+    const url = `/orgs/${org}/repos?page=${nextPage}`;
     try {
         const response = await axiosInstance.get(url);
         console.log(`fetched ${url} with ${response.status}`);
         if (response.status === 200 && response.data.length > 0) {
             repos.push(...response.data);
             sleep.sleep(1);
-            return await getRepos(nextPage + 1, repos);
+            return await getRepos(org, nextPage + 1, repos);
         }
         else {
             return repos;
@@ -39,20 +39,19 @@ export const getRepos = async (nextPage: number = 1, repos: Array<object> = []) 
     }
 };
 
-export const getIssuesByRepo = async (name: string) => {
-    const url = `repos/myrepo/${name}/issues?state=open`;
+export const getIssuesByRepo = async (url: string) => {
     try {
         sleep.sleep(1);
         const response = await axiosInstance.get(url);
         console.log(`fetched ${url} with ${response.status}`);
         if (response.status === 200 && response.data.length > 0) {
-            console.log(`Repo ${name} has a total of ${response.data.length} issues.`);
+            console.log(`Repo has a total of ${response.data.length} issues.`);
             return response.data;
         }
         return [];
     }
     catch (e) {
-        console.log(`there was an error when pulling repository ${name}`, e);
+        console.log(`there was an error when pulling ${url}`, e);
         return [];
     }
 };
